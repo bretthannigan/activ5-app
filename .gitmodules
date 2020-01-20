@@ -1,0 +1,3 @@
+[submodule "activ5-bluetooth-web"]
+	path = activ5-bluetooth-web
+	url = https://github.com/ActivBody/activ5-bluetooth-web.git
