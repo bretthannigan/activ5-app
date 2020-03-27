@@ -9,8 +9,12 @@ import { A5DeviceManager, A5Device } from 'activ5-device';
 export class AppComponent {
 
   public device: A5Device;
-  public buffer: string[] = ['test'];
+  public csvService: CsvDataService; 
+  public buffer: object[] = [];
+  public timeStamp: number[] = [];
   public isStreaming: boolean = false;
+  private seconds: number = 0;
+  private counter: NodeJS.Timeout;
   
   private manager = new A5DeviceManager();
 
@@ -23,9 +27,9 @@ export class AppComponent {
       }
 
       this.device = newDevice;
+
       this.device.getIsometricData().subscribe((data: string) => {
-        this.buffer.push(data);
-        console.log(data);
+        this.buffer.push({'Time (s)': new Date().getTime(), 'Force (N)': data});
       });
 
       this.device.onDisconnect().subscribe((event: Event) => {
@@ -36,6 +40,8 @@ export class AppComponent {
 
   public startStreaming(): void {
     this.device.startIsometric();
+    this.counter = setInterval(() => {
+      this.seconds++;}, 1000);
     this.isStreaming = true;
   }
 
@@ -44,6 +50,7 @@ export class AppComponent {
   }
 
   public stopStreaming(): void {
+    clearInterval(this.counter);
     this.device.stop();
     this.isStreaming = false;
   }
@@ -57,6 +64,73 @@ export class AppComponent {
     this.isStreaming = false;
   }
 
+  public clear(): void {
+    this.buffer = [];
+    clearInterval(this.counter);
+    this.seconds = 0;
+  }
+
+  public download(): void {
+    var today = new Date().toISOString()
+    CsvDataService.exportToCsv("Activ5Force_" + today + ".csv", this.buffer)
+  }
+
+  public hms(): string {
+    var h = Math.floor(this.seconds / 3600);
+    var m = Math.floor(this.seconds % 3600 / 60);
+    var s = Math.floor(this.seconds % 3600 % 60);
+
+    var hDisplay = h > 0 ? h + ":" : "";
+    var mDisplay: string;
+    if (m>9) {mDisplay = m + ":"}
+    else if (m>0) {mDisplay = "0" + m + ":"}
+    else {mDisplay = "00:"}
+    var sDisplay = s > 9 ? s : "0" + s;
+    return hDisplay + mDisplay + sDisplay; 
+}
+
   title = 'activ5-app';
 
+}
+
+export class CsvDataService {
+  static exportToCsv(filename: string, rows: object[]) {
+    if (!rows || !rows.length) {
+      return;
+    }
+    const separator = ',';
+    const keys = Object.keys(rows[0]);
+    const csvContent =
+      keys.join(separator) +
+      '\n' +
+      rows.map(row => {
+        return keys.map(k => {
+          let cell = row[k] === null || row[k] === undefined ? '' : row[k];
+          cell = cell instanceof Date
+            ? cell.toLocaleString()
+            : cell.toString().replace(/"/g, '""');
+          if (cell.search(/("|,|\n)/g) >= 0) {
+            cell = `"${cell}"`;
+          }
+          return cell;
+        }).join(separator);
+      }).join('\n');
+
+    const blob = new Blob([csvContent], { type: 'text/csv;charset=utf-8;' });
+    if (navigator.msSaveBlob) { // IE 10+
+      navigator.msSaveBlob(blob, filename);
+    } else {
+      const link = document.createElement('a');
+      if (link.download !== undefined) {
+        // Browsers that support HTML5 download attribute
+        const url = URL.createObjectURL(blob);
+        link.setAttribute('href', url);
+        link.setAttribute('download', filename);
+        link.style.visibility = 'hidden';
+        document.body.appendChild(link);
+        link.click();
+        document.body.removeChild(link);
+      }
+    }
+  }
 }

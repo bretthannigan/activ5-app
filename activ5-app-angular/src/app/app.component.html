@@ -1,5 +1,15 @@
+<!DOCTYPE html>
+<html lang = "en-US">
+ <head>
+ <meta charset = "UTF-8">
+ <link rel = "stylesheet"
+   type = "text/css"
+   href = "app.component.css" />
+ </head>
+
 <div class="container">
-  <h1>Device</h1>
+  <h1>Activ5 Force Sensor Data Logger</h1>
+  <h2>Device</h2>
   <div *ngIf="!device; then pairBlock else deviceBlock"></div>
   <ng-template #pairBlock>
     <font color="#ff0000">No device connected.</font><br>
@@ -11,15 +21,19 @@
   </ng-template>
 
   <div *ngIf="device">
-  <h1>Streaming</h1>
+  <h2>Streaming</h2>
+  {{buffer.length}} Samples ({{hms()}})<br>
     <div *ngIf="isStreaming; then streamingBlock else noStreamingBlock">Is streaming</div>
     <ng-template #noStreamingBlock>
-      Not streaming<br>
       <button (click)="startStreaming()">Start</button>
     </ng-template>
     <ng-template #streamingBlock>
-      Streaming... {{buffer.join(',')}}<br>
       <button (click)="stopStreaming()">Stop</button>
     </ng-template>
-  </div>
+    <div *ngIf="!isStreaming && buffer.length>0">
+      <button (click)="clear()"><font color="#ff0000">Clear</font></button><br>
+      <button (click)="download()">Download CSV</button>
+    </div>
+  </div>  
+  
 </div>
