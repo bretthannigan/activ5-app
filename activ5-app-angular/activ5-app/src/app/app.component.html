@@ -1,0 +1,25 @@
+<div class="container">
+  <h1>Device</h1>
+  <div *ngIf="!device; then pairBlock else deviceBlock"></div>
+  <ng-template #pairBlock>
+    <font color="#ff0000">No device connected.</font><br>
+    <button (click)="connect()">Pair</button>
+  </ng-template>
+  <ng-template #deviceBlock>
+    <font color="#009933">Connected to {{device.device.name}}</font><br>
+    <button (click)="disconnect()">Disconnect</button>
+  </ng-template>
+
+  <div *ngIf="device">
+  <h1>Streaming</h1>
+    <div *ngIf="isStreaming; then streamingBlock else noStreamingBlock">Is streaming</div>
+    <ng-template #noStreamingBlock>
+      Not streaming<br>
+      <button (click)="startStreaming()">Start</button>
+    </ng-template>
+    <ng-template #streamingBlock>
+      Streaming... {{buffer.join(',')}}<br>
+      <button (click)="stopStreaming()">Stop</button>
+    </ng-template>
+  </div>
+</div>
