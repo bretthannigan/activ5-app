@@ -14,7 +14,7 @@ export class AppComponent {
   public timeStamp: number[] = [];
   public isStreaming: boolean = false;
   private seconds: number = 0;
-  private counter: NodeJS.Timeout;
+  private counter;
   
   private manager = new A5DeviceManager();
 
